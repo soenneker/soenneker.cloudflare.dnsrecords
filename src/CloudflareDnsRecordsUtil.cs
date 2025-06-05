@@ -32,13 +32,16 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecords_dnsRecordPost
         {
-            Type = "A",
-            AdditionalData = new Dictionary<string, object>
+            DnsRecordsDnsRecordWithData = new DnsRecords_dnsRecordWithData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", proxied}
+                Type = "A",
+                AdditionalData = new Dictionary<string, object>
+                {
+                    {"name", name},
+                    {"content", content},
+                    {"ttl", ttl},
+                    {"proxied", proxied}
+                }
             }
         };
 
@@ -52,13 +55,16 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecords_dnsRecordPost
         {
-            Type = "CNAME",
-            AdditionalData = new Dictionary<string, object>
+            DnsRecordsDnsRecordWithData = new DnsRecords_dnsRecordWithData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", proxied}
+                Type = "CNAME",
+                AdditionalData = new Dictionary<string, object>
+                {
+                    {"name", name},
+                    {"content", content},
+                    {"ttl", ttl},
+                    {"proxied", proxied}
+                }
             }
         };
 
@@ -72,13 +78,16 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecords_dnsRecordPost
         {
-            Type = "TXT",
-            AdditionalData = new Dictionary<string, object>
+            DnsRecordsDnsRecordWithData = new DnsRecords_dnsRecordWithData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", false}
+                Type = "TXT",
+                AdditionalData = new Dictionary<string, object>
+                {
+                    {"name", name},
+                    {"content", content},
+                    {"ttl", ttl},
+                    {"proxied", false}
+                }
             }
         };
 
@@ -92,14 +101,17 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecords_dnsRecordPost
         {
-            Type = "MX",
-            AdditionalData = new Dictionary<string, object>
+            DnsRecordsDnsRecordWithData = new DnsRecords_dnsRecordWithData
             {
-                {"name", name},
-                {"content", content},
-                {"priority", priority},
-                {"ttl", ttl},
-                {"proxied", false}
+                Type = "MX",
+                AdditionalData = new Dictionary<string, object>
+                {
+                    {"name", name},
+                    {"content", content},
+                    {"priority", priority},
+                    {"ttl", ttl},
+                    {"proxied", false}
+                }
             }
         };
 
@@ -114,12 +126,18 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         {
             Dns_recordsRequestBuilder? dnsRecords = client.Zones[zoneId].Dns_records;
             DnsRecords_dns_response_single? result = await dnsRecords.PostAsync(record, null, cancellationToken);
-            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
+            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", 
+                record.DnsRecordsDnsRecordWithData?.Type, 
+                zoneId, 
+                record.DnsRecordsDnsRecordWithData?.AdditionalData["name"]);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
+            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", 
+                record.DnsRecordsDnsRecordWithData?.Type, 
+                zoneId, 
+                record.DnsRecordsDnsRecordWithData?.AdditionalData["name"]);
             throw;
         }
     }
@@ -162,8 +180,10 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
 
             DnsRecords_dnsRecordResponse? recordToDelete = records.Result.FirstOrDefault(r =>
-                r.AdditionalData.TryGetValue("name", out object? recordName) && recordName?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true &&
-                r.Type?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
+                r.AdditionalData.TryGetValue("name", out object? recordName) &&
+                recordName?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true &&
+                r.AdditionalData.TryGetValue("type", out object? recordType) &&
+                recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
 
             if (recordToDelete == null)
             {
@@ -171,7 +191,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 return;
             }
 
-            await DeleteRecordById(zoneId, recordToDelete.Id.ToString(), cancellationToken);
+            await DeleteRecordById(zoneId, recordToDelete.Id?.ToString() ?? throw new InvalidOperationException("Record ID is null"), cancellationToken);
         }
         catch (Exception ex)
         {
@@ -197,11 +217,17 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 return;
             }
 
-            IEnumerable<DnsRecords_dnsRecordResponse> recordsToDelete = records.Result.Where(r => r.Type?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
+            IEnumerable<DnsRecords_dnsRecordResponse> recordsToDelete =
+                records.Result.Where(r => 
+                    r.AdditionalData.TryGetValue("type", out object? recordType) &&
+                    recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
 
             foreach (DnsRecords_dnsRecordResponse record in recordsToDelete)
             {
-                await DeleteRecordById(zoneId, record.Id.ToString(), cancellationToken);
+                if (record.Id != null)
+                {
+                    await DeleteRecordById(zoneId, record.Id.ToString(), cancellationToken);
+                }
             }
 
             _logger.LogInformation("Successfully deleted all {Type} records from zone {ZoneId}", type, zoneId);
