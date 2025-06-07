@@ -1,6 +1,6 @@
-﻿using Soenneker.Cloudflare.OpenApiClient.Models;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using Soenneker.Cloudflare.OpenApiClient.Models;
 
 namespace Soenneker.Cloudflare.DnsRecords.Abstract;
 
