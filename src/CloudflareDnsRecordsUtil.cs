@@ -28,6 +28,10 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
     public async ValueTask<DnsRecords_dns_response_single> AddARecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentNullException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNullOrEmpty(content);
+
         _logger.LogInformation("Adding A record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
         var record = new DnsRecords_dnsRecordPost
@@ -48,6 +52,10 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
     public async ValueTask<DnsRecords_dns_response_single> AddCnameRecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentNullException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNullOrEmpty(content);
+
         _logger.LogInformation("Adding CNAME record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
         var record = new DnsRecords_dnsRecordPost
@@ -68,6 +76,10 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
     public async ValueTask<DnsRecords_dns_response_single> AddTxtRecord(string zoneId, string name, string content, int ttl = 1,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentNullException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNullOrEmpty(content);
+
         _logger.LogInformation("Adding TXT record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
         var record = new DnsRecords_dnsRecordPost
@@ -88,6 +100,10 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
     public async ValueTask<DnsRecords_dns_response_single> AddMxRecord(string zoneId, string name, string content, int priority, int ttl = 1,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentNullException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNullOrEmpty(content);
+
         _logger.LogInformation("Adding MX record for zone {ZoneId}: {Name} -> {Content} (Priority: {Priority})", zoneId, name, content, priority);
 
         var record = new DnsRecords_dnsRecordPost
@@ -108,6 +124,9 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
     private async ValueTask<DnsRecords_dns_response_single> AddRecord(string zoneId, DnsRecords_dnsRecordPost record, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentNullException.ThrowIfNull(record);
+
         CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken);
 
         try
