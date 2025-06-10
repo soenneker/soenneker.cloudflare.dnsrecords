@@ -241,4 +241,24 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             throw;
         }
     }
+
+    public async ValueTask RemoveARecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    {
+        await DeleteRecordByNameAndType(zoneId, name, "A", cancellationToken);
+    }
+
+    public async ValueTask RemoveCnameRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    {
+        await DeleteRecordByNameAndType(zoneId, name, "CNAME", cancellationToken);
+    }
+
+    public async ValueTask RemoveTxtRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    {
+        await DeleteRecordByNameAndType(zoneId, name, "TXT", cancellationToken);
+    }
+
+    public async ValueTask RemoveMxRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    {
+        await DeleteRecordByNameAndType(zoneId, name, "MX", cancellationToken);
+    }
 }

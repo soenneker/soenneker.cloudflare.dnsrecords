@@ -76,4 +76,36 @@ public interface ICloudflareDnsRecordsUtil
     /// <param name="type">The type of DNS records to delete.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     ValueTask DeleteRecordsByType(string zoneId, string type, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes an A record by its name.
+    /// </summary>
+    /// <param name="zoneId">The ID of the Cloudflare zone.</param>
+    /// <param name="name">The name of the A record to remove.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    ValueTask RemoveARecord(string zoneId, string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes a CNAME record by its name.
+    /// </summary>
+    /// <param name="zoneId">The ID of the Cloudflare zone.</param>
+    /// <param name="name">The name of the CNAME record to remove.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    ValueTask RemoveCnameRecord(string zoneId, string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes a TXT record by its name.
+    /// </summary>
+    /// <param name="zoneId">The ID of the Cloudflare zone.</param>
+    /// <param name="name">The name of the TXT record to remove.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    ValueTask RemoveTxtRecord(string zoneId, string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes an MX record by its name.
+    /// </summary>
+    /// <param name="zoneId">The ID of the Cloudflare zone.</param>
+    /// <param name="name">The name of the MX record to remove.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    ValueTask RemoveMxRecord(string zoneId, string name, CancellationToken cancellationToken = default);
 }
