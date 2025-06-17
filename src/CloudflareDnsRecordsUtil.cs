@@ -161,7 +161,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         try
         {
             WithDns_record_ItemRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records[recordId];
-            var body = new Dns_records_for_a_zone_delete_dns_record_RequestBody_application_json();
+            var body = new Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records.Item.WithDns_record_DeleteRequestBody();
             await dnsRecords.DeleteAsync(body, null, cancellationToken);
             _logger.LogInformation("Successfully deleted DNS record {RecordId} from zone {ZoneId}", recordId, zoneId);
         }
