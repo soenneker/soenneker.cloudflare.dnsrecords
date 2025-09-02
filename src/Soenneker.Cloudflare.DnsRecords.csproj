@@ -42,7 +42,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Soenneker.Cloudflare.Utils.Client" Version="3.0.237" />
-        <ProjectReference Include="..\..\soenneker.cloudflare.openapiclient\src\Soenneker.Cloudflare.OpenApiClient.csproj" />
+        <PackageReference Include="Soenneker.Cloudflare.Utils.Client" Version="3.0.238" />
     </ItemGroup>
 </Project>
