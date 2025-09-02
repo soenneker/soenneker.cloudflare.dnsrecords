@@ -18,7 +18,7 @@ public interface ICloudflareDnsRecordsUtil
     /// <param name="ttl">Time to live in seconds (1 = auto).</param>
     /// <param name="proxied">Whether the record should be proxied through Cloudflare.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    ValueTask<DnsRecords_dns_response_single> AddARecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true, CancellationToken cancellationToken = default);
+    ValueTask<Dns_records_dns_response_single> AddARecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a CNAME record to the specified zone.
@@ -29,7 +29,7 @@ public interface ICloudflareDnsRecordsUtil
     /// <param name="ttl">Time to live in seconds (1 = auto).</param>
     /// <param name="proxied">Whether the record should be proxied through Cloudflare.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    ValueTask<DnsRecords_dns_response_single> AddCnameRecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true, CancellationToken cancellationToken = default);
+    ValueTask<Dns_records_dns_response_single> AddCnameRecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a TXT record to the specified zone.
@@ -39,7 +39,7 @@ public interface ICloudflareDnsRecordsUtil
     /// <param name="content">The text content of the record.</param>
     /// <param name="ttl">Time to live in seconds (1 = auto).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    ValueTask<DnsRecords_dns_response_single> AddTxtRecord(string zoneId, string name, string content, int ttl = 1, CancellationToken cancellationToken = default);
+    ValueTask<Dns_records_dns_response_single> AddTxtRecord(string zoneId, string name, string content, int ttl = 1, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds an MX record to the specified zone.
@@ -50,7 +50,7 @@ public interface ICloudflareDnsRecordsUtil
     /// <param name="priority">The priority of the MX record (lower number = higher priority).</param>
     /// <param name="ttl">Time to live in seconds (1 = auto).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    ValueTask<DnsRecords_dns_response_single> AddMxRecord(string zoneId, string name, string content, int priority, int ttl = 1, CancellationToken cancellationToken = default);
+    ValueTask<Dns_records_dns_response_single> AddMxRecord(string zoneId, string name, string content, int priority, int ttl = 1, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a DNS record by its ID.

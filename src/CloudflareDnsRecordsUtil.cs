@@ -2,14 +2,16 @@
 using Soenneker.Cloudflare.DnsRecords.Abstract;
 using Soenneker.Cloudflare.OpenApiClient;
 using Soenneker.Cloudflare.OpenApiClient.Models;
+using Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records;
+using Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records.Item;
 using Soenneker.Cloudflare.Utils.Client.Abstract;
+using Soenneker.Extensions.Task;
+using Soenneker.Extensions.ValueTask;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records;
-using Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records.Item;
 
 namespace Soenneker.Cloudflare.DnsRecords;
 
@@ -21,20 +23,20 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
     public CloudflareDnsRecordsUtil(ICloudflareClientUtil client, ILogger<CloudflareDnsRecordsUtil> logger)
     {
-        _clientUtil = client ?? throw new ArgumentNullException(nameof(client));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _clientUtil = client;
+        _logger = logger;
     }
 
-    public async ValueTask<DnsRecords_dns_response_single> AddARecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
+    public async ValueTask<Dns_records_dns_response_single> AddARecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNullOrEmpty(content);
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(content);
 
         _logger.LogInformation("Adding A record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecords_dnsRecordPost
+        var record = new Dns_records_dns_record_post
         {
             Type = "A",
             AdditionalData = new Dictionary<string, object>
@@ -46,19 +48,19 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
         };
 
-        return await AddRecord(zoneId, record, cancellationToken);
+        return await AddRecord(zoneId, record, cancellationToken).NoSync();
     }
 
-    public async ValueTask<DnsRecords_dns_response_single> AddCnameRecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
+    public async ValueTask<Dns_records_dns_response_single> AddCnameRecord(string zoneId, string name, string content, int ttl = 1, bool proxied = true,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNullOrEmpty(content);
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(content);
 
         _logger.LogInformation("Adding CNAME record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecords_dnsRecordPost
+        var record = new Dns_records_dns_record_post
         {
             Type = "CNAME",
             AdditionalData = new Dictionary<string, object>
@@ -70,19 +72,19 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
         };
 
-        return await AddRecord(zoneId, record, cancellationToken);
+        return await AddRecord(zoneId, record, cancellationToken).NoSync();
     }
 
-    public async ValueTask<DnsRecords_dns_response_single> AddTxtRecord(string zoneId, string name, string content, int ttl = 1,
+    public async ValueTask<Dns_records_dns_response_single> AddTxtRecord(string zoneId, string name, string content, int ttl = 1,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNullOrEmpty(content);
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(content);
 
         _logger.LogInformation("Adding TXT record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecords_dnsRecordPost
+        var record = new Dns_records_dns_record_post
         {
             Type = "TXT",
             AdditionalData = new Dictionary<string, object>
@@ -94,19 +96,19 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
         };
 
-        return await AddRecord(zoneId, record, cancellationToken);
+        return await AddRecord(zoneId, record, cancellationToken).NoSync();
     }
 
-    public async ValueTask<DnsRecords_dns_response_single> AddMxRecord(string zoneId, string name, string content, int priority, int ttl = 1,
+    public async ValueTask<Dns_records_dns_response_single> AddMxRecord(string zoneId, string name, string content, int priority, int ttl = 1,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNullOrEmpty(content);
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(content);
 
         _logger.LogInformation("Adding MX record for zone {ZoneId}: {Name} -> {Content} (Priority: {Priority})", zoneId, name, content, priority);
 
-        var record = new DnsRecords_dnsRecordPost
+        var record = new Dns_records_dns_record_post
         {
             Type = "MX",
             AdditionalData = new Dictionary<string, object>
@@ -119,32 +121,26 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
         };
 
-        return await AddRecord(zoneId, record, cancellationToken);
+        return await AddRecord(zoneId, record, cancellationToken).NoSync();
     }
 
-    private async ValueTask<DnsRecords_dns_response_single> AddRecord(string zoneId, DnsRecords_dnsRecordPost record, CancellationToken cancellationToken)
+    private async ValueTask<Dns_records_dns_response_single> AddRecord(string zoneId, Dns_records_dns_record_post record, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(zoneId);
+        ArgumentException.ThrowIfNullOrEmpty(zoneId);
         ArgumentNullException.ThrowIfNull(record);
 
-        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken);
+        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken).NoSync();
 
         try
         {
             Dns_recordsRequestBuilder? dnsRecords = client.Zones[zoneId].Dns_records;
-            DnsRecords_dns_response_single? result = await dnsRecords.PostAsync(record, null, cancellationToken);
-            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", 
-                record.Type, 
-                zoneId, 
-                record.AdditionalData["name"]);
+            Dns_records_dns_response_single? result = await dnsRecords.PostAsync(record, null, cancellationToken).NoSync();
+            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", 
-                record.Type, 
-                zoneId, 
-                record.AdditionalData["name"]);
+            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
             throw;
         }
     }
@@ -156,13 +152,13 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Deleting DNS record {RecordId} from zone {ZoneId}", recordId, zoneId);
 
-        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken);
+        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken).NoSync();
 
         try
         {
             WithDns_record_ItemRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records[recordId];
-            var body = new Soenneker.Cloudflare.OpenApiClient.Zones.Item.Dns_records.Item.WithDns_record_DeleteRequestBody();
-            await dnsRecords.DeleteAsync(body, null, cancellationToken);
+            var body = new WithDns_record_DeleteRequestBody();
+            await dnsRecords.DeleteAsync(body, null, cancellationToken).NoSync();
             _logger.LogInformation("Successfully deleted DNS record {RecordId} from zone {ZoneId}", recordId, zoneId);
         }
         catch (Exception ex)
@@ -185,7 +181,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         try
         {
             Dns_recordsRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records;
-            DnsRecords_dns_response_collection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken);
+            Dns_records_dns_response_collection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken).NoSync();
 
             if (records?.Result == null)
             {
@@ -193,7 +189,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 return;
             }
 
-            DnsRecords_dnsRecordResponse? recordToDelete = records.Result.FirstOrDefault(r =>
+            Dns_records_dns_record_response? recordToDelete = records.Result.FirstOrDefault(r =>
                 r.AdditionalData.TryGetValue("name", out object? recordName) &&
                 recordName?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true &&
                 r.AdditionalData.TryGetValue("type", out object? recordType) &&
@@ -210,7 +206,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 throw new InvalidOperationException($"Record ID is null for {type} record {name} in zone {zoneId}");
             }
 
-            await DeleteRecordById(zoneId, recordToDelete.Id.ToString(), cancellationToken);
+            await DeleteRecordById(zoneId, recordToDelete.Id, cancellationToken).NoSync();
         }
         catch (Exception ex)
         {
@@ -226,12 +222,12 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Deleting all {Type} records from zone {ZoneId}", type, zoneId);
 
-        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken);
+        CloudflareOpenApiClient client = await _clientUtil.Get(cancellationToken).NoSync();
 
         try
         {
             Dns_recordsRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records;
-            DnsRecords_dns_response_collection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken);
+            Dns_records_dns_response_collection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken).NoSync();
 
             if (records?.Result == null)
             {
@@ -239,16 +235,15 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 return;
             }
 
-            IEnumerable<DnsRecords_dnsRecordResponse> recordsToDelete =
-                records.Result.Where(r => 
-                    r.AdditionalData.TryGetValue("type", out object? recordType) &&
-                    recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
+            IEnumerable<Dns_records_dns_record_response> recordsToDelete = records.Result.Where(r =>
+                r.AdditionalData.TryGetValue("type", out object? recordType) &&
+                recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
 
-            foreach (DnsRecords_dnsRecordResponse record in recordsToDelete)
+            foreach (Dns_records_dns_record_response record in recordsToDelete)
             {
                 if (record.Id != null)
                 {
-                    await DeleteRecordById(zoneId, record.Id.ToString(), cancellationToken);
+                    await DeleteRecordById(zoneId, record.Id, cancellationToken).NoSync();
                 }
             }
 
@@ -261,23 +256,23 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         }
     }
 
-    public async ValueTask RemoveARecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    public ValueTask RemoveARecord(string zoneId, string name, CancellationToken cancellationToken = default)
     {
-        await DeleteRecordByNameAndType(zoneId, name, "A", cancellationToken);
+        return DeleteRecordByNameAndType(zoneId, name, "A", cancellationToken);
     }
 
-    public async ValueTask RemoveCnameRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    public ValueTask RemoveCnameRecord(string zoneId, string name, CancellationToken cancellationToken = default)
     {
-        await DeleteRecordByNameAndType(zoneId, name, "CNAME", cancellationToken);
+        return DeleteRecordByNameAndType(zoneId, name, "CNAME", cancellationToken);
     }
 
-    public async ValueTask RemoveTxtRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    public ValueTask RemoveTxtRecord(string zoneId, string name, CancellationToken cancellationToken = default)
     {
-        await DeleteRecordByNameAndType(zoneId, name, "TXT", cancellationToken);
+        return DeleteRecordByNameAndType(zoneId, name, "TXT", cancellationToken);
     }
 
-    public async ValueTask RemoveMxRecord(string zoneId, string name, CancellationToken cancellationToken = default)
+    public ValueTask RemoveMxRecord(string zoneId, string name, CancellationToken cancellationToken = default)
     {
-        await DeleteRecordByNameAndType(zoneId, name, "MX", cancellationToken);
+        return DeleteRecordByNameAndType(zoneId, name, "MX", cancellationToken);
     }
 }
