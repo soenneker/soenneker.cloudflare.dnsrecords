@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Soenneker.Cloudflare.DnsRecords.csproj" />
+        <ProjectReference Include="..\..\src\Soenneker.Cloudflare.DnsRecords\Soenneker.Cloudflare.DnsRecords.csproj" />
     </ItemGroup>
 
     <ItemGroup>
