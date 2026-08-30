@@ -9,13 +9,13 @@ using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Soenneker.Cloudflare.DnsRecords;
 
-///<inheritdoc cref="ICloudflareDnsRecordsUtil"/>
 public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 {
     private readonly ICloudflareClientUtil _clientUtil;
@@ -136,7 +136,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             Dns_recordsRequestBuilder? dnsRecords = client.Zones[zoneId].Dns_records;
             DnsRecordsDnsResponseSingle? result = await dnsRecords.PostAsync(record, null, cancellationToken).NoSync();
             _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
-            return result;
+            return result ?? throw new InvalidOperationException("Cloudflare returned an empty response after creating the DNS record.");
         }
         catch (Exception ex)
         {
@@ -192,8 +192,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             DnsRecordsDnsRecordResponse? recordToDelete = records.Result.FirstOrDefault(r =>
                 r.AdditionalData.TryGetValue("name", out object? recordName) &&
                 recordName?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true &&
-                r.AdditionalData.TryGetValue("type", out object? recordType) &&
-                recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
+                string.Equals(r.Type, type, StringComparison.OrdinalIgnoreCase));
 
             if (recordToDelete == null)
             {
@@ -227,27 +226,36 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         try
         {
             Dns_recordsRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records;
-            DnsRecordsDnsResponseCollection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken).NoSync();
+            var recordIds = new List<string>();
+            var page = 1;
 
-            if (records?.Result == null)
+            while (true)
             {
-                _logger.LogWarning("No DNS records found in zone {ZoneId}", zoneId);
-                return;
-            }
-
-            IEnumerable<DnsRecordsDnsRecordResponse> recordsToDelete = records.Result.Where(r =>
-                r.AdditionalData.TryGetValue("type", out object? recordType) &&
-                recordType?.ToString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
-
-            foreach (DnsRecordsDnsRecordResponse record in recordsToDelete)
-            {
-                if (record.Id != null)
+                DnsRecordsDnsResponseCollection? records = await dnsRecords.GetAsync(config =>
                 {
-                    await DeleteRecordById(zoneId, record.Id, cancellationToken).NoSync();
-                }
+                    config.QueryParameters.Page = page.ToString(CultureInfo.InvariantCulture);
+                    config.QueryParameters.PerPage = "100";
+                }, cancellationToken).NoSync();
+
+                if (records?.Result is not { } pageRecords || pageRecords.Count == 0)
+                    break;
+
+                recordIds.AddRange(pageRecords.Where(record => string.Equals(record.Type, type, StringComparison.OrdinalIgnoreCase))
+                                              .Select(record => record.Id)
+                                              .OfType<string>());
+
+                double? totalPages = records.ResultInfo?.TotalPages;
+
+                if (totalPages.HasValue ? page >= totalPages.Value : pageRecords.Count < 100)
+                    break;
+
+                page++;
             }
 
-            _logger.LogInformation("Successfully deleted all {Type} records from zone {ZoneId}", type, zoneId);
+            foreach (string recordId in recordIds)
+                await DeleteRecordById(zoneId, recordId, cancellationToken).NoSync();
+
+            _logger.LogInformation("Deleted {Count} {Type} records from zone {ZoneId}", recordIds.Count, type, zoneId);
         }
         catch (Exception ex)
         {
