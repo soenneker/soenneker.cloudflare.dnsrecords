@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Cloudflare.DnsRecords;
 
+/// <inheritdoc cref="ICloudflareDnsRecordsUtil" />
 public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 {
     private readonly ICloudflareClientUtil _clientUtil;
