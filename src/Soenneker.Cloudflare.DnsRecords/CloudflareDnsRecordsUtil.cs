@@ -40,7 +40,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         var record = new DnsRecordsDnsRecordPost
         {
             Type = "A",
-            AdditionalData = new Dictionary<string, object>
+            AdditionalData = new Dictionary<string, object>(4)
             {
                 {"name", name},
                 {"content", content},
@@ -64,7 +64,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         var record = new DnsRecordsDnsRecordPost
         {
             Type = "CNAME",
-            AdditionalData = new Dictionary<string, object>
+            AdditionalData = new Dictionary<string, object>(4)
             {
                 {"name", name},
                 {"content", content},
@@ -88,7 +88,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         var record = new DnsRecordsDnsRecordPost
         {
             Type = "TXT",
-            AdditionalData = new Dictionary<string, object>
+            AdditionalData = new Dictionary<string, object>(4)
             {
                 {"name", name},
                 {"content", content},
@@ -112,7 +112,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         var record = new DnsRecordsDnsRecordPost
         {
             Type = "MX",
-            AdditionalData = new Dictionary<string, object>
+            AdditionalData = new Dictionary<string, object>(5)
             {
                 {"name", name},
                 {"content", content},
