@@ -9,8 +9,9 @@ using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using Microsoft.Kiota.Abstractions.Serialization;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,13 +40,15 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecordsDnsRecordPost
         {
-            Type = "A",
-            AdditionalData = new Dictionary<string, object>(4)
+            DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", proxied}
+                Name = name,
+                Content = content,
+                Ttl = new DnsRecordsTtl { Double = ttl },
+                Proxied = proxied,
+                PrivateRouting = null,
+                // Kiota types this nested union discriminator as AType; preserve the requested wire literal.
+                AdditionalData = new Dictionary<string, object> { ["type"] = "A" }
             }
         };
 
@@ -63,13 +66,15 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecordsDnsRecordPost
         {
-            Type = "CNAME",
-            AdditionalData = new Dictionary<string, object>(4)
+            DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", proxied}
+                Name = name,
+                Content = content,
+                Ttl = new DnsRecordsTtl { Double = ttl },
+                Proxied = proxied,
+                PrivateRouting = null,
+                // Kiota types this nested union discriminator as AType; preserve the requested wire literal.
+                AdditionalData = new Dictionary<string, object> { ["type"] = "CNAME" }
             }
         };
 
@@ -87,13 +92,15 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecordsDnsRecordPost
         {
-            Type = "TXT",
-            AdditionalData = new Dictionary<string, object>(4)
+            DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
-                {"name", name},
-                {"content", content},
-                {"ttl", ttl},
-                {"proxied", false}
+                Name = name,
+                Content = content,
+                Ttl = new DnsRecordsTtl { Double = ttl },
+                Proxied = false,
+                PrivateRouting = null,
+                // Kiota types this nested union discriminator as AType; preserve the requested wire literal.
+                AdditionalData = new Dictionary<string, object> { ["type"] = "TXT" }
             }
         };
 
@@ -111,14 +118,16 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         var record = new DnsRecordsDnsRecordPost
         {
-            Type = "MX",
-            AdditionalData = new Dictionary<string, object>(5)
+            DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
-                {"name", name},
-                {"content", content},
-                {"priority", priority},
-                {"ttl", ttl},
-                {"proxied", false}
+                Name = name,
+                Content = content,
+                Ttl = new DnsRecordsTtl { Double = ttl },
+                Proxied = false,
+                PrivateRouting = null,
+                Priority = priority,
+                // Kiota types this nested union discriminator as AType; preserve the requested wire literal.
+                AdditionalData = new Dictionary<string, object> { ["type"] = "MX" }
             }
         };
 
@@ -136,12 +145,12 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         {
             Dns_recordsRequestBuilder? dnsRecords = client.Zones[zoneId].Dns_records;
             DnsRecordsDnsResponseSingle? result = await dnsRecords.PostAsync(record, null, cancellationToken).NoSync();
-            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
+            _logger.LogInformation("Successfully added {Type} record for zone {ZoneId}: {Name}", GetRecordString(record, "type"), zoneId, GetRecordString(record, "name"));
             return result ?? throw new InvalidOperationException("Cloudflare returned an empty response after creating the DNS record.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", record.Type, zoneId, record.AdditionalData["name"]);
+            _logger.LogError(ex, "Failed to add {Type} record for zone {ZoneId}: {Name}", GetRecordString(record, "type"), zoneId, GetRecordString(record, "name"));
             throw;
         }
     }
@@ -157,9 +166,8 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         try
         {
-            WithDns_record_ItemRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records[recordId];
-            var body = new WithDns_record_DeleteRequestBody();
-            await dnsRecords.DeleteAsync(body, null, cancellationToken).NoSync();
+            WithDnsRecordItemRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records[recordId];
+            await dnsRecords.DeleteAsync(cancellationToken: cancellationToken).NoSync();
             _logger.LogInformation("Successfully deleted DNS record {RecordId} from zone {ZoneId}", recordId, zoneId);
         }
         catch (Exception ex)
@@ -191,9 +199,8 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             }
 
             DnsRecordsDnsRecordResponse? recordToDelete = records.Result.FirstOrDefault(r =>
-                r.AdditionalData.TryGetValue("name", out object? recordName) &&
-                recordName?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true &&
-                string.Equals(r.Type, type, StringComparison.OrdinalIgnoreCase));
+                string.Equals(GetRecordString(r, "name"), name, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(GetRecordString(r, "type"), type, StringComparison.OrdinalIgnoreCase));
 
             if (recordToDelete == null)
             {
@@ -201,12 +208,13 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
                 return;
             }
 
-            if (recordToDelete.Id == null)
+            string? recordId = GetRecordString(recordToDelete, "id");
+            if (recordId == null)
             {
                 throw new InvalidOperationException($"Record ID is null for {type} record {name} in zone {zoneId}");
             }
 
-            await DeleteRecordById(zoneId, recordToDelete.Id, cancellationToken).NoSync();
+            await DeleteRecordById(zoneId, recordId, cancellationToken).NoSync();
         }
         catch (Exception ex)
         {
@@ -234,15 +242,15 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             {
                 DnsRecordsDnsResponseCollection? records = await dnsRecords.GetAsync(config =>
                 {
-                    config.QueryParameters.Page = page.ToString(CultureInfo.InvariantCulture);
-                    config.QueryParameters.PerPage = "100";
+                    config.QueryParameters.Page = page;
+                    config.QueryParameters.PerPage = 100;
                 }, cancellationToken).NoSync();
 
                 if (records?.Result is not { } pageRecords || pageRecords.Count == 0)
                     break;
 
-                recordIds.AddRange(pageRecords.Where(record => string.Equals(record.Type, type, StringComparison.OrdinalIgnoreCase))
-                                              .Select(record => record.Id)
+                recordIds.AddRange(pageRecords.Where(record => string.Equals(GetRecordString(record, "type"), type, StringComparison.OrdinalIgnoreCase))
+                                              .Select(record => GetRecordString(record, "id"))
                                               .OfType<string>());
 
                 double? totalPages = records.ResultInfo?.TotalPages;
@@ -263,6 +271,16 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
             _logger.LogError(ex, "Failed to delete all {Type} records from zone {ZoneId}", type, zoneId);
             throw;
         }
+    }
+
+    private static string? GetRecordString(IParsable record, string name)
+    {
+        using var writer = new Microsoft.Kiota.Serialization.Json.JsonSerializationWriter();
+        writer.WriteObjectValue(null, record);
+        using JsonDocument document = JsonDocument.Parse(writer.GetSerializedContent());
+        return document.RootElement.TryGetProperty(name, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
     }
 
     public ValueTask RemoveARecord(string zoneId, string name, CancellationToken cancellationToken = default)
