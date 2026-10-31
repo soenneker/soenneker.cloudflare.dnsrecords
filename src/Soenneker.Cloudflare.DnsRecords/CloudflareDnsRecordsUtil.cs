@@ -38,7 +38,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Adding A record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecordsDnsRecordPost
+        var record = new DnsRecordsDnsRecordBatchPost
         {
             DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
@@ -64,7 +64,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Adding CNAME record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecordsDnsRecordPost
+        var record = new DnsRecordsDnsRecordBatchPost
         {
             DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
@@ -90,7 +90,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Adding TXT record for zone {ZoneId}: {Name} -> {Content}", zoneId, name, content);
 
-        var record = new DnsRecordsDnsRecordPost
+        var record = new DnsRecordsDnsRecordBatchPost
         {
             DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
@@ -116,7 +116,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
         _logger.LogInformation("Adding MX record for zone {ZoneId}: {Name} -> {Content} (Priority: {Priority})", zoneId, name, content, priority);
 
-        var record = new DnsRecordsDnsRecordPost
+        var record = new DnsRecordsDnsRecordBatchPost
         {
             DnsRecordsDnsRecordWithoutData = new DnsRecordsDnsRecordWithoutData
             {
@@ -134,7 +134,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         return await AddRecord(zoneId, record, cancellationToken).NoSync();
     }
 
-    private async ValueTask<DnsRecordsDnsResponseSingle> AddRecord(string zoneId, DnsRecordsDnsRecordPost record, CancellationToken cancellationToken)
+    private async ValueTask<DnsRecordsDnsResponseSingle> AddRecord(string zoneId, DnsRecordsDnsRecordBatchPost record, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(zoneId);
         ArgumentNullException.ThrowIfNull(record);
