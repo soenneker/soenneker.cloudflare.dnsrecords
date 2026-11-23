@@ -190,7 +190,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
         try
         {
             Dns_recordsRequestBuilder dnsRecords = client.Zones[zoneId].Dns_records;
-            DnsRecordsDnsResponseCollection? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken).NoSync();
+            DnsRecordsDnsResponseList? records = await dnsRecords.GetAsync(cancellationToken: cancellationToken).NoSync();
 
             if (records?.Result == null)
             {
@@ -240,7 +240,7 @@ public sealed class CloudflareDnsRecordsUtil : ICloudflareDnsRecordsUtil
 
             while (true)
             {
-                DnsRecordsDnsResponseCollection? records = await dnsRecords.GetAsync(config =>
+                DnsRecordsDnsResponseList? records = await dnsRecords.GetAsync(config =>
                 {
                     config.QueryParameters.Page = page;
                     config.QueryParameters.PerPage = 100;
